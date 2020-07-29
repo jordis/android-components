@@ -431,12 +431,17 @@ sealed class WebExtensionAction : BrowserAction() {
  * [BrowserState].
  */
 sealed class EngineAction : BrowserAction() {
-    // TODO: docs
+    /**
+     * Creates an [EngineSession] for the given [tabId] if none exists yet.
+     */
     data class CreateEngineSessionAction(
         val tabId: String,
         val skipLoading: Boolean = false
     ) : EngineAction()
 
+    /**
+     * Loads the given [url] in the tab with the given [sessionId].
+     */
     data class LoadUrlAction(
         val sessionId: String,
         val url: String,
@@ -444,6 +449,9 @@ sealed class EngineAction : BrowserAction() {
         val additionalHeaders: Map<String, String>? = null
     ) : EngineAction()
 
+    /**
+     * Loads [data] in the tab with the given [sessionId].
+     */
     data class LoadDataAction(
         val sessionId: String,
         val data: String,
@@ -451,37 +459,61 @@ sealed class EngineAction : BrowserAction() {
         val encoding: String = "UTF-8"
     ) : EngineAction()
 
+    /**
+     * Reloads the tab with the given [sessionId].
+     */
     data class ReloadAction(
         val sessionId: String,
         val flags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none()
     ) : EngineAction()
 
+    /**
+     * Stops loading in the tab with the given [sessionId].
+     */
     data class StopLoadingAction(
         val sessionId: String
     ) : EngineAction()
 
+    /**
+     * Navigates back in the tab with the given [sessionId].
+     */
     data class GoBackAction(
         val sessionId: String
     ) : EngineAction()
 
+    /**
+     * Navigates forward in the tab with the given [sessionId].
+     */
     data class GoForwardAction(
         val sessionId: String
     ) : EngineAction()
 
+    /**
+     * Navigates to the specified index in the history of the tab with the given [sessionId].
+     */
     data class GoToHistoryIndexAction(
         val sessionId: String,
         val index: Int
     ) : EngineAction()
 
+    /**
+     * Enables/disables desktop mode in the tabs with the given [sessionId].
+     */
     data class ToggleDesktopModeAction(
         val sessionId: String,
         val enable: Boolean
     ) : EngineAction()
 
+    /**
+     * Exits fullscreen mode in the tabs with the given [sessionId].
+     */
     data class ExitFullscreenModeAction(
         val sessionId: String
     ) : EngineAction()
 
+    /**
+     * Clears browsing data for the tab with the given [sessionId].
+     */
     data class ClearDataAction(
         val sessionId: String,
         val data: Engine.BrowsingData
