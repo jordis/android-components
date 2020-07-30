@@ -578,38 +578,6 @@ class SessionTest {
     }
 
     @Test
-    fun `observer is notified on on thumbnail changed `() {
-        val observer = mock(Session.Observer::class.java)
-        val session = Session("https://www.mozilla.org")
-        val emptyThumbnail = spy(Bitmap::class.java)
-        session.register(observer)
-        session.thumbnail = emptyThumbnail
-        verify(observer).onThumbnailChanged(session, emptyThumbnail)
-        reset(observer)
-        session.unregister(observer)
-        session.thumbnail = emptyThumbnail
-        verify(observer, never()).onThumbnailChanged(session, emptyThumbnail)
-    }
-
-    @Test
-    fun `action is dispatched when thumbnail changes`() {
-        val store: BrowserStore = mock()
-        `when`(store.dispatch(any())).thenReturn(mock())
-
-        val session = Session("https://www.mozilla.org")
-        session.store = store
-
-        val emptyThumbnail = spy(Bitmap::class.java)
-        session.thumbnail = emptyThumbnail
-        verify(store).dispatch(ContentAction.UpdateThumbnailAction(session.id, emptyThumbnail))
-
-        session.thumbnail = null
-        verify(store).dispatch(ContentAction.RemoveThumbnailAction(session.id))
-
-        verifyNoMoreInteractions(store)
-    }
-
-    @Test
     fun `session observer has default methods`() {
         val session = Session("")
         val defaultObserver = object : Session.Observer {}
@@ -629,7 +597,6 @@ class SessionTest {
         defaultObserver.onTrackerBlockingEnabledChanged(session, true)
         defaultObserver.onTrackerBlocked(session, mock(), emptyList())
         defaultObserver.onDesktopModeChanged(session, true)
-        defaultObserver.onThumbnailChanged(session, spy(Bitmap::class.java))
         defaultObserver.onContentPermissionRequested(session, contentPermissionRequest)
         defaultObserver.onAppPermissionRequested(session, appPermissionRequest)
         defaultObserver.onWebAppManifestChanged(session, mock())
@@ -749,30 +716,6 @@ class SessionTest {
     fun `toString returns string containing id and url`() {
         val session = Session(id = "my-session-id", initialUrl = "https://www.mozilla.org")
         assertEquals("Session(my-session-id, https://www.mozilla.org)", session.toString())
-    }
-
-    @Test
-    fun `WHEN crashed state changes THEN observers are notified`() {
-        val session = Session("https://www.mozilla.org")
-
-        var observedCrashState: Boolean? = null
-
-        session.register(object : Session.Observer {
-            override fun onCrashStateChanged(session: Session, crashed: Boolean) {
-                observedCrashState = crashed
-            }
-        })
-
-        assertFalse(session.crashed)
-
-        session.crashed = true
-        assertTrue(session.crashed)
-        assertTrue(observedCrashState!!)
-        observedCrashState = null
-
-        session.crashed = false
-        assertFalse(session.crashed)
-        assertFalse(observedCrashState!!)
     }
 
     @Test
