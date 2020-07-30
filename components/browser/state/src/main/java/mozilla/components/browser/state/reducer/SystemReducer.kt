@@ -28,9 +28,13 @@ internal object SystemReducer {
 
         return state.copy(
             tabs = state.tabs.map { tab ->
-                tab.copy(
-                    content = tab.content.copy(thumbnail = null)
-                )
+                if (tab.id != state.selectedTabId) {
+                    tab.copy(
+                        content = tab.content.copy(thumbnail = null)
+                    )
+                } else {
+                    tab
+                }
             },
             customTabs = state.customTabs.map { tab ->
                 tab.copy(
