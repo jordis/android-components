@@ -334,8 +334,7 @@ class SessionTest {
         verify(store, never()).dispatch(TabListAction.AddTabAction(session.toTabSessionState()))
 
         session.customTabConfig = null
-        verify(store).dispatch(CustomTabListAction.RemoveCustomTabAction(session.id))
-        verify(store).dispatch(TabListAction.AddTabAction(session.toTabSessionState()))
+        verify(store).dispatch(CustomTabListAction.TurnCustomTabIntoNormalTabAction(session.id))
         verifyNoMoreInteractions(store)
     }
 

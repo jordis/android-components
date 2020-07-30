@@ -12,7 +12,9 @@ import androidx.annotation.WorkerThread
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.ext.readSnapshot
 import mozilla.components.browser.session.ext.writeState
+import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.selector.normalTabs
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
@@ -63,11 +65,11 @@ class SessionStorage(
             return true
         }
 
-        /*
-        requireNotNull(snapshot.sessions.getOrNull(snapshot.selectedSessionIndex)) {
-            "SessionSnapshot's selected index must be in bounds"
+        if (state.selectedTabId != null) {
+            requireNotNull(state.selectedTab) {
+                "Selected session must exist"
+            }
         }
-         */
 
         synchronized(sessionFileLock) {
             return getFileForEngine(context, engine)

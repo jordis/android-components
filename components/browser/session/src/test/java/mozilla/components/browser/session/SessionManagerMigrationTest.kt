@@ -4,7 +4,7 @@
 
 package mozilla.components.browser.session
 
-import android.content.ComponentCallbacks2
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.storage.SessionStorage
 import mozilla.components.browser.state.action.ReaderAction
 import mozilla.components.browser.state.selector.findTab
@@ -23,16 +23,14 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.mockito.Mockito.doReturn
-import org.mockito.Mockito.never
-import org.mockito.Mockito.verify
+import org.junit.runner.RunWith
 
 /**
  * This test suite validates that calls on [SessionManager] update [BrowserStore] to create a matching state.
  */
+@RunWith(AndroidJUnit4::class)
 class SessionManagerMigrationTest {
     @Test
     fun `Add session`() {
@@ -862,10 +860,4 @@ class SessionManagerMigrationTest {
         assertNull(store.state.tabs[0].engineState.engineSessionState)
         assertEquals(engineSession, store.state.tabs[0].engineState.engineSession)
     }
-}
-
-private fun createMockEngineSessionWithState(): EngineSession {
-    val engineSession: EngineSession = mock()
-    doReturn(mock<EngineSessionState>()).`when`(engineSession).saveState()
-    return engineSession
 }

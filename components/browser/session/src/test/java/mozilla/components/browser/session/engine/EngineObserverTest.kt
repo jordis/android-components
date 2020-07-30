@@ -212,7 +212,6 @@ class EngineObserverTest {
         val store: MiddlewareStore<BrowserState, BrowserAction> = mock()
         val observer = EngineObserver(session, store)
 
-        whenever(store.dispatch(any())).thenReturn(mock())
         observer.onExcludedOnTrackingProtectionChange(true)
 
         verify(store).dispatch(
@@ -854,7 +853,6 @@ class EngineObserverTest {
         val session = Session("")
         val store: MiddlewareStore<BrowserState, BrowserAction> = mock()
         val observer = EngineObserver(session, store)
-        whenever(store.dispatch(any())).thenReturn(mock())
 
         observer.onHistoryStateChanged(emptyList(), 0)
         verify(store).dispatch(
@@ -869,6 +867,7 @@ class EngineObserverTest {
             HistoryItem("Firefox", "https://firefox.com"),
             HistoryItem("Mozilla", "http://mozilla.org")
         ), 1)
+
         verify(store).dispatch(
             ContentAction.UpdateHistoryStateAction(
                 session.id,
