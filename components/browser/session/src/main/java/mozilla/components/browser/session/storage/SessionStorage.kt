@@ -12,7 +12,6 @@ import androidx.annotation.WorkerThread
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.ext.readSnapshot
 import mozilla.components.browser.session.ext.writeState
-import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState

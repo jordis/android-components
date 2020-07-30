@@ -214,7 +214,9 @@ class SessionManager(
             item.engineSession?.let { store?.syncDispatch(LinkEngineSessionAction(item.session.id, it)) }
 
             if (item.engineSession == null) {
-                item.engineSessionState?.let { store?.syncDispatch(UpdateEngineSessionStateAction(item.session.id, it)) }
+                item.engineSessionState?.let {
+                    store?.syncDispatch(UpdateEngineSessionStateAction(item.session.id, it))
+                }
             }
 
             item.readerState?.let {

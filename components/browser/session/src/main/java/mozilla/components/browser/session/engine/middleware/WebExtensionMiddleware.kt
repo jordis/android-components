@@ -18,7 +18,7 @@ import mozilla.components.support.base.log.logger.Logger
  * [Middleware] implementation responsible for calling [EngineSession.markActiveForWebExtensions] on
  * [EngineSession] instances.
  */
-internal class WebExtensionsMiddleware : Middleware<BrowserState, BrowserAction> {
+internal class WebExtensionMiddleware : Middleware<BrowserState, BrowserAction> {
     private val logger = Logger("WebExtensionsMiddleware")
     // This is state. As such it should be in BrowserState (WebExtensionState) and not here.
     // https://github.com/mozilla-mobile/android-components/issues/7884

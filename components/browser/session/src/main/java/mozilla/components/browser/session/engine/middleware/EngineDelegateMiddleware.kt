@@ -30,6 +30,7 @@ class EngineDelegateMiddleware(
 ) : Middleware<BrowserState, BrowserAction> {
     private val logger = Logger("EngineSessionMiddleware")
 
+    @Suppress("LongMethod")
     override fun invoke(
         store: MiddlewareStore<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
@@ -90,7 +91,7 @@ class EngineDelegateMiddleware(
             }
 
             is EngineAction.StopLoadingAction -> scope.launch {
-                // TODO: Do we need to create an engine session for this? Could we stop in the use case if there is
+                // TODO Do we need to create an engine session for this? Could we stop in the use case if there is
                 // an engine session. If there's none then do nothing?
                 val engineSession = getOrCreateEngineSession(
                     engine,

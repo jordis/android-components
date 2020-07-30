@@ -131,6 +131,9 @@ sealed class CustomTabListAction : BrowserAction() {
      */
     data class RemoveCustomTabAction(val tabId: String) : CustomTabListAction()
 
+    /**
+     * Converts an existing [CustomTabSessionState] to a regular/normal [TabSessionState].
+     */
     data class TurnCustomTabIntoNormalTabAction(val tabId: String) : CustomTabListAction()
 
     /**
@@ -529,6 +532,9 @@ sealed class EngineAction : BrowserAction() {
         val skipLoading: Boolean = false
     ) : EngineAction()
 
+    /**
+     * Suspends the [EngineSession] of the session with the provided [sessionId].
+     */
     data class SuspendEngineSessionAction(
         val sessionId: String
     ) : EngineAction()
@@ -547,9 +553,18 @@ sealed class EngineAction : BrowserAction() {
     ) : EngineAction()
 }
 
+/**
+ * [BrowserAction] implementations to react to crashes.
+ */
 sealed class CrashAction : BrowserAction() {
+    /**
+     * Updates the [SessionState] of the session with provided ID to mark it as crashed.
+     */
     data class SessionCrashedAction(val tabId: String) : CrashAction()
 
+    /**
+     * Updates the [SessionState] of the session with provided ID to mark it as restored.
+     */
     data class RestoreCrashedSessionAction(val tabId: String) : CrashAction()
 }
 

@@ -817,7 +817,6 @@ class SessionManagerMigrationTest {
         }
     }
 
-
     @Test
     fun `Adding session with engine session state`() {
         val store = BrowserStore()

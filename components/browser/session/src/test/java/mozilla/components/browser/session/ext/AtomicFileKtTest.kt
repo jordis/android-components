@@ -96,7 +96,7 @@ class AtomicFileKtTest {
             UUID.randomUUID().toString(),
             UUID.randomUUID().toString()))
 
-        val state = BrowserState(tabs = listOf (
+        val state = BrowserState(tabs = listOf(
                 session1.toTabSessionState(),
                 session2.toTabSessionState(),
                 session3.toTabSessionState()

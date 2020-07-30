@@ -66,7 +66,7 @@ class SessionStorageTest {
         `when`(engine.createSessionState(any())).thenReturn(engineSessionState)
 
         // Persist the state
-        val state = BrowserState(tabs = listOf (
+        val state = BrowserState(tabs = listOf(
                 session1.toTabSessionState(),
                 session2.toTabSessionState(),
                 session3.toTabSessionState()
@@ -130,7 +130,7 @@ class SessionStorageTest {
         `when`(engine.createSession()).thenReturn(mock(EngineSession::class.java))
 
         // Persist the state
-        val state = BrowserState(tabs = listOf (
+        val state = BrowserState(tabs = listOf(
                 session1.toTabSessionState(),
                 session2.toTabSessionState()
             ),
@@ -155,7 +155,7 @@ class SessionStorageTest {
 
         val storage = SessionStorage(testContext, engine)
         val session = Session("http://mozilla.org")
-        val state = BrowserState(selectedTabId = "invalid", tabs = listOf (session.toTabSessionState()))
+        val state = BrowserState(selectedTabId = "invalid", tabs = listOf(session.toTabSessionState()))
         storage.save(state)
     }
 

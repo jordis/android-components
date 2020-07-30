@@ -132,7 +132,7 @@ class P2PFeature(
             return
         }
 
-        // TODO: Action for registering content message handler? Do we really need that?
+        // TODO Action for registering content message handler? Do we really need that?
         /*
         store.dispatch(EngineAction.CreateEngineSessionAction(
             session.id,
@@ -169,7 +169,7 @@ class P2PFeature(
         private fun sendMessage(json: JSONObject) {
             val session = activeSession ?: return
 
-            // TODO: Action for sending content message. Do we really need that?
+            // TODO Action for sending content message. Do we really need that?
             json.hashCode()
             session.hashCode()
             /*

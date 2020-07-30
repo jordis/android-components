@@ -15,7 +15,7 @@ import mozilla.components.browser.session.engine.middleware.LinkingMiddleware
 import mozilla.components.browser.session.engine.middleware.SuspendMiddleware
 import mozilla.components.browser.session.engine.middleware.TabsRemovedMiddleware
 import mozilla.components.browser.session.engine.middleware.TrimMemoryMiddleware
-import mozilla.components.browser.session.engine.middleware.WebExtensionsMiddleware
+import mozilla.components.browser.session.engine.middleware.WebExtensionMiddleware
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.selector.findTabOrCustomTab
@@ -55,7 +55,7 @@ object EngineMiddleware {
             LinkingMiddleware(),
             TabsRemovedMiddleware(scope),
             SuspendMiddleware(scope),
-            WebExtensionsMiddleware(),
+            WebExtensionMiddleware(),
             TrimMemoryMiddleware(),
             CrashMiddleware()
         )
@@ -72,12 +72,12 @@ internal fun getOrCreateEngineSession(
 ): EngineSession? {
     val tab = store.state.findTabOrCustomTab(tabId)
     if (tab == null) {
-        logger.warn("Requested engine session for tab. But tab does not exist. (${tabId})")
+        logger.warn("Requested engine session for tab. But tab does not exist. ($tabId)")
         return null
     }
 
     tab.engineState.engineSession?.let {
-        logger.debug("Engine Session already exists for tab ${tabId}")
+        logger.debug("Engine Session already exists for tab $tabId")
         return it
     }
 

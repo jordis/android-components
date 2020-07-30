@@ -33,6 +33,12 @@ class AutoSave(
     private val minimumIntervalMs: Long
 ) {
     interface Storage {
+        /**
+         * Saves the provided [BrowserState].
+         *
+         * @param state the state to save.
+         * @return true if save was successful, otherwise false.
+         */
         fun save(state: BrowserState): Boolean
     }
 

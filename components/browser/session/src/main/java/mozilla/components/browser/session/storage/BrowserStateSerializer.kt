@@ -15,6 +15,13 @@ private const val VERSION = 2
  * Helper to transform [BrowserState] instances to JSON and.
  */
 class BrowserStateSerializer {
+
+    /**
+     * Serializes the provided [BrowserState] to JSON.
+     *
+     * @param state the state to serialize.
+     * @return the serialized state as JSON.
+     */
     fun toJSON(state: BrowserState): String {
         val json = JSONObject()
         json.put(Keys.VERSION_KEY, VERSION)

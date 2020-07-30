@@ -34,7 +34,7 @@ data class TabSessionState(
     val parentId: String? = null,
     val lastAccess: Long = 0L,
     val readerState: ReaderState = ReaderState()
-    ) : SessionState {
+) : SessionState {
 
     override fun createCopy(
         id: String,
