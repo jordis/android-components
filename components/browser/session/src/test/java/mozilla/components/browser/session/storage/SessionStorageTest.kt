@@ -13,6 +13,9 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.state.SessionState.Source
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.ext.toTabSessionState
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
@@ -62,19 +65,17 @@ class SessionStorageTest {
         `when`(engine.createSession()).thenReturn(mock(EngineSession::class.java))
         `when`(engine.createSessionState(any())).thenReturn(engineSessionState)
 
-        // Engine session just for one of the sessions for simplicity.
-        val sessionsSnapshot = SessionManager.Snapshot(
-            sessions = listOf(
-                SessionManager.Snapshot.Item(session1),
-                SessionManager.Snapshot.Item(session2),
-                SessionManager.Snapshot.Item(session3)
+        // Persist the state
+        val state = BrowserState(tabs = listOf (
+                session1.toTabSessionState(),
+                session2.toTabSessionState(),
+                session3.toTabSessionState()
             ),
-            selectedSessionIndex = 0
+            selectedTabId = session1.id
         )
 
-        // Persist the snapshot
         val storage = SessionStorage(testContext, engine)
-        val persisted = storage.save(sessionsSnapshot)
+        val persisted = storage.save(state)
         assertTrue(persisted)
 
         // Read it back
@@ -106,12 +107,12 @@ class SessionStorageTest {
     }
 
     @Test
-    fun `Saving empty snapshot`() {
+    fun `Saving empty state`() {
         val engine = mock(Engine::class.java)
         `when`(engine.name()).thenReturn("gecko")
 
         val storage = spy(SessionStorage(testContext, engine))
-        storage.save(SessionManager.Snapshot(emptyList(), SessionManager.NO_SELECTION))
+        storage.save(BrowserState())
 
         verify(storage).clear()
 
@@ -124,24 +125,20 @@ class SessionStorageTest {
         val session1 = Session("http://mozilla.org", id = "session1")
         val session2 = Session("http://getpocket.com", id = "session2")
 
-        val engineSession = mock(EngineSession::class.java)
-
         val engine = mock(Engine::class.java)
         `when`(engine.name()).thenReturn("gecko")
         `when`(engine.createSession()).thenReturn(mock(EngineSession::class.java))
 
-        // Engine session just for one of the sessions for simplicity.
-        val sessionsSnapshot = SessionManager.Snapshot(
-            sessions = listOf(
-                SessionManager.Snapshot.Item(session1, engineSession),
-                SessionManager.Snapshot.Item(session2)
+        // Persist the state
+        val state = BrowserState(tabs = listOf (
+                session1.toTabSessionState(),
+                session2.toTabSessionState()
             ),
-            selectedSessionIndex = 0
+            selectedTabId = session1.id
         )
 
-        // Persist the snapshot
         val storage = SessionStorage(testContext, engine)
-        val persisted = storage.save(sessionsSnapshot)
+        val persisted = storage.save(state)
         assertTrue(persisted)
 
         storage.clear()
@@ -152,24 +149,14 @@ class SessionStorageTest {
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun `Should throw when saving illegal snapshot`() {
+    fun `Should throw when saving illegal state`() {
         val engine = mock(Engine::class.java)
         `when`(engine.name()).thenReturn("gecko")
 
         val storage = SessionStorage(testContext, engine)
-
         val session = Session("http://mozilla.org")
-        val engineSession = mock(EngineSession::class.java)
-        val sessionsSnapshot = SessionManager.Snapshot(
-            sessions = listOf(
-                SessionManager.Snapshot.Item(
-                    session,
-                    engineSession
-                )
-            ),
-            selectedSessionIndex = 1
-        )
-        storage.save(sessionsSnapshot)
+        val state = BrowserState(selectedTabId = "invalid", tabs = listOf (session.toTabSessionState()))
+        storage.save(state)
     }
 
     @Test
@@ -180,13 +167,13 @@ class SessionStorageTest {
             val owner = mock(LifecycleOwner::class.java)
             val lifecycle = LifecycleRegistry(owner)
 
-            val snapshot: SessionManager.Snapshot = mock()
             val sessionManager: SessionManager = mock()
-            doReturn(snapshot).`when`(sessionManager).createSnapshot()
-
             val sessionStorage: SessionStorage = mock()
 
+            val state = BrowserState()
+            val store = BrowserStore(state)
             val autoSave = AutoSave(
+                store = store,
                 sessionManager = sessionManager,
                 sessionStorage = sessionStorage,
                 minimumIntervalMs = 0
@@ -205,7 +192,7 @@ class SessionStorageTest {
 
             autoSave.saveJob!!.join()
 
-            verify(sessionStorage).save(snapshot)
+            verify(sessionStorage).save(state)
         }
     }
 
@@ -216,7 +203,10 @@ class SessionStorageTest {
 
             val sessionStorage: SessionStorage = mock()
 
+            val state = BrowserState()
+            val store = BrowserStore(state)
             val autoSave = AutoSave(
+                store = store,
                 sessionManager = sessionManager,
                 sessionStorage = sessionStorage,
                 minimumIntervalMs = 0
@@ -244,7 +234,10 @@ class SessionStorageTest {
 
             val sessionStorage: SessionStorage = mock()
 
+            val state = BrowserState()
+            val store = BrowserStore(state)
             val autoSave = AutoSave(
+                store = store,
                 sessionManager = sessionManager,
                 sessionStorage = sessionStorage,
                 minimumIntervalMs = 0
@@ -270,7 +263,10 @@ class SessionStorageTest {
 
             val sessionStorage: SessionStorage = mock()
 
+            val state = BrowserState()
+            val store = BrowserStore(state)
             val autoSave = AutoSave(
+                store = store,
                 sessionManager = sessionManager,
                 sessionStorage = sessionStorage,
                 minimumIntervalMs = 0
@@ -296,10 +292,13 @@ class SessionStorageTest {
 
             val sessionStorage: SessionStorage = mock()
 
+            val state = BrowserState()
+            val store = BrowserStore(state)
             val autoSave = AutoSave(
-                    sessionManager = sessionManager,
-                    sessionStorage = sessionStorage,
-                    minimumIntervalMs = 0
+                store = store,
+                sessionManager = sessionManager,
+                sessionStorage = sessionStorage,
+                minimumIntervalMs = 0
             ).whenSessionsChange()
 
             assertNull(autoSave.saveJob)
@@ -327,7 +326,11 @@ class SessionStorageTest {
 
             val sessionStorage: SessionStorage = mock()
 
+            val state = BrowserState()
+            val store = BrowserStore(state)
+
             val autoSave = AutoSave(
+                store = store,
                 sessionManager = sessionManager,
                 sessionStorage = sessionStorage,
                 minimumIntervalMs = 0
@@ -354,7 +357,10 @@ class SessionStorageTest {
 
             val sessionStorage: SessionStorage = mock()
 
+            val state = BrowserState()
+            val store = BrowserStore(state)
             val autoSave = AutoSave(
+                store = store,
                 sessionManager = sessionManager,
                 sessionStorage = sessionStorage,
                 minimumIntervalMs = 0
@@ -389,8 +395,10 @@ class SessionStorageTest {
         val owner = mock(LifecycleOwner::class.java)
         val lifecycle = LifecycleRegistry(owner)
 
+        val state = BrowserState()
+        val store = BrowserStore(state)
         val storage = SessionStorage(testContext, engine)
-        storage.autoSave(mock())
+        storage.autoSave(store, mock())
             .periodicallyInForeground(300, TimeUnit.SECONDS, scheduler, lifecycle)
 
         verifyNoMoreInteractions(scheduler)
@@ -414,7 +422,10 @@ class SessionStorageTest {
         val sessionManager = SessionManager(mock())
         val sessionStorage: SessionStorage = mock()
 
+        val state = BrowserState()
+        val store = BrowserStore(state)
         val autoSave = AutoSave(
+            store = store,
             sessionManager = sessionManager,
             sessionStorage = sessionStorage,
             minimumIntervalMs = 0
@@ -432,7 +443,10 @@ class SessionStorageTest {
         val sessionManager = SessionManager(mock())
         val sessionStorage: SessionStorage = mock()
 
+        val state = BrowserState()
+        val store = BrowserStore(state)
         val autoSave = AutoSave(
+            store = store,
             sessionManager = sessionManager,
             sessionStorage = sessionStorage,
             minimumIntervalMs = 0
