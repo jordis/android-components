@@ -12,6 +12,7 @@ import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.lib.state.Middleware
@@ -36,22 +37,29 @@ class EngineDelegateMiddleware(
     ) {
         when (action) {
             is EngineAction.LoadUrlAction -> scope.launch {
-                val engineSession = getOrCreateEngineSession(
-                    engine,
-                    action.sessionId,
-                    logger,
-                    sessionLookup,
-                    store
-                )
-
-                val parentEngineSession = store.state.findTabOrCustomTab(action.sessionId)?.let {
-                    store.state.findTabOrCustomTab(it.id)?.engineState?.engineSession
+                val tab = store.state.findTabOrCustomTab(action.sessionId) ?: return@launch
+                val parentEngineSession = if (tab is TabSessionState) {
+                    tab.parentId?.let { store.state.findTabOrCustomTab(it)?.engineState?.engineSession }
+                } else {
+                    null
                 }
 
-                // TODO: If we created a new session then we already loaded the URL in the linking step.
-                // TODO: So we do not need to load it here again.
+                if (tab.engineState.engineSession == null && tab.content.url == action.url) {
+                    // This tab does not have an engine session and we are asked to load the URL this
+                    // session is already pointing to. Creating an EngineSession will do exactly
+                    // that in the linking step. So let's do that. Otherwise we would load the URL
+                    // twice.
+                    store.dispatch(EngineAction.CreateEngineSessionAction(action.sessionId))
+                    return@launch
+                }
 
-                engineSession?.loadUrl(
+                getOrCreateEngineSession(
+                    engine,
+                    logger,
+                    sessionLookup,
+                    store,
+                    tabId = action.sessionId
+                )?.loadUrl(
                     url = action.url,
                     parent = parentEngineSession,
                     flags = action.flags,
@@ -60,112 +68,103 @@ class EngineDelegateMiddleware(
             }
 
             is EngineAction.LoadDataAction -> scope.launch {
-                val engineSession =
-                    getOrCreateEngineSession(
-                        engine,
-                        action.sessionId,
-                        logger,
-                        sessionLookup,
-                        store
-                    )
+                val engineSession = getOrCreateEngineSession(
+                    engine,
+                    logger,
+                    sessionLookup,
+                    store,
+                    tabId = action.sessionId
+                )
                 engineSession?.loadData(action.data, action.mimeType, action.encoding)
             }
 
             is EngineAction.ReloadAction -> scope.launch {
-                val engineSession =
-                    getOrCreateEngineSession(
-                        engine,
-                        action.sessionId,
-                        logger,
-                        sessionLookup,
-                        store
-                    )
+                val engineSession = getOrCreateEngineSession(
+                    engine,
+                    logger,
+                    sessionLookup,
+                    store,
+                    tabId = action.sessionId
+                )
                 engineSession?.reload(action.flags)
             }
 
             is EngineAction.StopLoadingAction -> scope.launch {
                 // TODO: Do we need to create an engine session for this? Could we stop in the use case if there is
                 // an engine session. If there's none then do nothing?
-                val engineSession =
-                    getOrCreateEngineSession(
-                        engine,
-                        action.sessionId,
-                        logger,
-                        sessionLookup,
-                        store
-                    )
+                val engineSession = getOrCreateEngineSession(
+                    engine,
+                    logger,
+                    sessionLookup,
+                    store,
+                    tabId = action.sessionId
+                )
                 engineSession?.stopLoading()
             }
 
             is EngineAction.GoBackAction -> scope.launch {
-                val engineSession =
-                    getOrCreateEngineSession(
-                        engine,
-                        action.sessionId,
-                        logger,
-                        sessionLookup,
-                        store
-                    )
+                val engineSession = getOrCreateEngineSession(
+                    engine,
+                    logger,
+                    sessionLookup,
+                    store,
+                    tabId = action.sessionId
+                )
                 engineSession?.goBack()
             }
 
             is EngineAction.GoForwardAction -> scope.launch {
-                val engineSession =
-                    getOrCreateEngineSession(
-                        engine,
-                        action.sessionId,
-                        logger,
-                        sessionLookup,
-                        store
-                    )
+                val engineSession = getOrCreateEngineSession(
+                    engine,
+                    logger,
+                    sessionLookup,
+                    store,
+                    tabId = action.sessionId
+                )
                 engineSession?.goForward()
             }
 
             is EngineAction.GoToHistoryIndexAction -> scope.launch {
-                val engineSession =
-                    getOrCreateEngineSession(
-                        engine,
-                        action.sessionId,
-                        logger,
-                        sessionLookup,
-                        store
-                    )
+                val engineSession = getOrCreateEngineSession(
+                    engine,
+                    logger,
+                    sessionLookup,
+                    store,
+                    tabId = action.sessionId
+                )
                 engineSession?.goToHistoryIndex(action.index)
             }
 
             is EngineAction.ToggleDesktopModeAction -> scope.launch {
-                val engineSession =
-                    getOrCreateEngineSession(
-                        engine,
-                        action.sessionId,
-                        logger,
-                        sessionLookup,
-                        store
-                    )
+                val engineSession = getOrCreateEngineSession(
+                    engine,
+                    logger,
+                    sessionLookup,
+                    store,
+                    tabId = action.sessionId
+                )
                 engineSession?.toggleDesktopMode(action.enable, reload = true)
             }
 
             is EngineAction.ExitFullscreenModeAction -> scope.launch {
-                val engineSession =
-                    getOrCreateEngineSession(
-                        engine,
-                        action.sessionId,
-                        logger,
-                        sessionLookup,
-                        store
-                    )
+                val engineSession = getOrCreateEngineSession(
+                    engine,
+                    logger,
+                    sessionLookup,
+                    store,
+                    tabId = action.sessionId
+                )
                 engineSession?.exitFullScreenMode()
             }
 
             is EngineAction.ClearDataAction -> scope.launch {
-                val engineSession =
-                    getOrCreateEngineSession(
-                        engine,
-                        action.sessionId,
-                        logger,
-                        sessionLookup,
-                        store
-                    )
+                val engineSession = getOrCreateEngineSession(
+                    engine,
+                    logger,
+                    sessionLookup,
+                    store,
+                    tabId = action.sessionId
+                )
                 engineSession?.clearData(action.data)
             }
 

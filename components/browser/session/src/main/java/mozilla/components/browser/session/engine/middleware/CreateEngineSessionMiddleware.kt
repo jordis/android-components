@@ -51,10 +51,10 @@ class CreateEngineSessionMiddleware(
             // create one and dispatch a LinkEngineSessionAction to add it to BrowserState.
             getOrCreateEngineSession(
                 engine,
-                action.tabId,
                 logger,
                 sessionLookup,
-                store
+                store,
+                action.tabId
             )
         }
     }

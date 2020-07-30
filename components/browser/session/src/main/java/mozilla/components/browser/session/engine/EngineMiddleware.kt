@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.session.engine
 
+import androidx.annotation.MainThread
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import mozilla.components.browser.session.Session
@@ -61,32 +62,29 @@ object EngineMiddleware {
     }
 }
 
+@MainThread
 internal fun getOrCreateEngineSession(
     engine: Engine,
-    tabId: String,
     logger: Logger,
     sessionLookup: (String) -> Session?,
-    store: MiddlewareStore<BrowserState, BrowserAction>
+    store: MiddlewareStore<BrowserState, BrowserAction>,
+    tabId: String
 ): EngineSession? {
     val tab = store.state.findTabOrCustomTab(tabId)
     if (tab == null) {
-        logger.warn("Requested engine session for tab. But tab does not exist. ($tabId)")
+        logger.warn("Requested engine session for tab. But tab does not exist. (${tabId})")
         return null
     }
 
-    return if (tab.engineState.engineSession != null) {
-        tab.engineState.engineSession
-    } else {
-        createEngineSession(
-            engine,
-            logger,
-            sessionLookup,
-            store,
-            tab
-        )
+    tab.engineState.engineSession?.let {
+        logger.debug("Engine Session already exists for tab ${tabId}")
+        return it
     }
+
+    return createEngineSession(engine, logger, sessionLookup, store, tab)
 }
 
+@MainThread
 private fun createEngineSession(
     engine: Engine,
     logger: Logger,
