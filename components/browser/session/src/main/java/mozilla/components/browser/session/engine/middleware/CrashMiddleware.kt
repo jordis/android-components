@@ -16,7 +16,7 @@ import mozilla.components.lib.state.MiddlewareStore
 /**
  * [Middleware] responsible for recovering crashed [EngineSession] instances.
  */
-class CrashMiddleware : Middleware<BrowserState, BrowserAction> {
+internal class CrashMiddleware : Middleware<BrowserState, BrowserAction> {
     override fun invoke(
         store: MiddlewareStore<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,

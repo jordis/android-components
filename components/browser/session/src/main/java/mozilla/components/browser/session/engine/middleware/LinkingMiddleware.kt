@@ -16,7 +16,7 @@ import mozilla.components.support.ktx.kotlin.isExtensionUrl
 /**
  * [Middleware] that handles side-effects of linking a session to an engine session.
  */
-class LinkingMiddleware : Middleware<BrowserState, BrowserAction> {
+internal class LinkingMiddleware : Middleware<BrowserState, BrowserAction> {
     override fun invoke(
         store: MiddlewareStore<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,

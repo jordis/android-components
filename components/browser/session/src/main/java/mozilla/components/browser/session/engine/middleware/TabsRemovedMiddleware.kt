@@ -24,7 +24,7 @@ import mozilla.components.lib.state.MiddlewareStore
  * [Middleware] responsible for closing and unlinking [EngineSession] instances whenever tabs get
  * removed.
  */
-class TabsRemovedMiddleware(
+internal class TabsRemovedMiddleware(
     private val scope: CoroutineScope
 ) : Middleware<BrowserState, BrowserAction> {
     override fun invoke(

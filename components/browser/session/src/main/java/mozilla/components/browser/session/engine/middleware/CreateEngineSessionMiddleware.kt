@@ -21,7 +21,7 @@ import mozilla.components.support.base.log.logger.Logger
  * [Middleware] responsible for creating [EngineSession] instances whenever an [EngineAction.CreateEngineSessionAction]
  * is getting dispatched.
  */
-class CreateEngineSessionMiddleware(
+internal class CreateEngineSessionMiddleware(
     private val engine: Engine,
     private val sessionLookup: (String) -> Session?,
     private val scope: CoroutineScope
