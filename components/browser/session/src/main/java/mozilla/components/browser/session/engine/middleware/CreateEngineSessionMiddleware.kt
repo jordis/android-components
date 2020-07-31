@@ -33,10 +33,10 @@ class CreateEngineSessionMiddleware(
         next: (BrowserAction) -> Unit,
         action: BrowserAction
     ) {
-        next(action)
-
         if (action is EngineAction.CreateEngineSessionAction) {
             createEngineSession(store, action)
+        } else {
+            next(action)
         }
     }
 

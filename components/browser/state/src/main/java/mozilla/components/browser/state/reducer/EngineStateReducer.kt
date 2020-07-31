@@ -32,20 +32,20 @@ internal object EngineStateReducer {
         is EngineAction.UpdateEngineSessionStateAction -> state.copyWithEngineState(action.sessionId) {
             it.copy(engineSessionState = action.engineSessionState)
         }
-        // TODO Intercept in middleware and throw here ("You need a middleware")?
-        // No-op: Action will be handled by EngineMiddleware
-        is EngineAction.SuspendEngineSessionAction -> state
-        is EngineAction.CreateEngineSessionAction -> state
-        is EngineAction.LoadDataAction -> state
-        is EngineAction.LoadUrlAction -> state
-        is EngineAction.ReloadAction -> state
-        is EngineAction.StopLoadingAction -> state
-        is EngineAction.GoBackAction -> state
-        is EngineAction.GoForwardAction -> state
-        is EngineAction.GoToHistoryIndexAction -> state
-        is EngineAction.ToggleDesktopModeAction -> state
-        is EngineAction.ExitFullscreenModeAction -> state
-        is EngineAction.ClearDataAction -> state
+        is EngineAction.SuspendEngineSessionAction,
+        is EngineAction.CreateEngineSessionAction,
+        is EngineAction.LoadDataAction,
+        is EngineAction.LoadUrlAction,
+        is EngineAction.ReloadAction,
+        is EngineAction.StopLoadingAction,
+        is EngineAction.GoBackAction,
+        is EngineAction.GoForwardAction,
+        is EngineAction.GoToHistoryIndexAction,
+        is EngineAction.ToggleDesktopModeAction,
+        is EngineAction.ExitFullscreenModeAction,
+        is EngineAction.ClearDataAction -> {
+            throw IllegalStateException("You need to add EngineMiddleware to your BrowserStore.")
+        }
     }
 }
 
