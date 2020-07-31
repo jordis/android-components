@@ -471,13 +471,6 @@ sealed class EngineAction : BrowserAction() {
     ) : EngineAction()
 
     /**
-     * Stops loading in the tab with the given [sessionId].
-     */
-    data class StopLoadingAction(
-        val sessionId: String
-    ) : EngineAction()
-
-    /**
      * Navigates back in the tab with the given [sessionId].
      */
     data class GoBackAction(

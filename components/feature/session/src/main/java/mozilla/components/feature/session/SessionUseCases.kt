@@ -8,6 +8,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.action.CrashAction
 import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine.BrowsingData
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
@@ -170,9 +171,10 @@ class SessionUseCases(
                 return
             }
 
-            store.dispatch(EngineAction.StopLoadingAction(
-                session.id
-            ))
+            store.state.findTabOrCustomTab(session.id)
+                ?.engineState
+                ?.engineSession
+                ?.stopLoading()
         }
     }
 

@@ -37,7 +37,6 @@ internal object EngineStateReducer {
         is EngineAction.LoadDataAction,
         is EngineAction.LoadUrlAction,
         is EngineAction.ReloadAction,
-        is EngineAction.StopLoadingAction,
         is EngineAction.GoBackAction,
         is EngineAction.GoForwardAction,
         is EngineAction.GoToHistoryIndexAction,

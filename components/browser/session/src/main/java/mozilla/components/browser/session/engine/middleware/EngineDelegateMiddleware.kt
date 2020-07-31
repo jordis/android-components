@@ -90,19 +90,6 @@ class EngineDelegateMiddleware(
                 engineSession?.reload(action.flags)
             }
 
-            is EngineAction.StopLoadingAction -> scope.launch {
-                // TODO Do we need to create an engine session for this? Could we stop in the use case if there is
-                // an engine session. If there's none then do nothing?
-                val engineSession = getOrCreateEngineSession(
-                    engine,
-                    logger,
-                    sessionLookup,
-                    store,
-                    tabId = action.sessionId
-                )
-                engineSession?.stopLoading()
-            }
-
             is EngineAction.GoBackAction -> scope.launch {
                 val engineSession = getOrCreateEngineSession(
                     engine,
