@@ -57,7 +57,11 @@ object EngineMiddleware {
             SuspendMiddleware(scope),
             WebExtensionMiddleware(),
             TrimMemoryMiddleware(),
-            CrashMiddleware()
+            CrashMiddleware(
+                engine,
+                sessionLookup,
+                scope
+            )
         )
     }
 }
