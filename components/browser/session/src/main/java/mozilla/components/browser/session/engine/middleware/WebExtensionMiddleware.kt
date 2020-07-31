@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.session.engine.middleware
 
+import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
@@ -22,17 +23,31 @@ internal class WebExtensionMiddleware : Middleware<BrowserState, BrowserAction> 
     private val logger = Logger("WebExtensionsMiddleware")
     // This is state. As such it should be in BrowserState (WebExtensionState) and not here.
     // https://github.com/mozilla-mobile/android-components/issues/7884
-    private var activeWebExtensionTabId: String? = null
+    @VisibleForTesting
+    internal var activeWebExtensionTabId: String? = null
 
     override fun invoke(
         store: MiddlewareStore<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
         action: BrowserAction
     ) {
+
+        when (action) {
+            is EngineAction.UnlinkEngineSessionAction -> {
+                if (activeWebExtensionTabId == action.sessionId) {
+                    val activeTab = store.state.findTab(action.sessionId)
+                    activeTab?.engineState?.engineSession?.markActiveForWebExtensions(false)
+                }
+            }
+        }
+
         next(action)
 
-        if (action is TabListAction || action is EngineAction.LinkEngineSessionAction) {
-            switchActiveStateIfNeeded(store.state)
+        when (action) {
+            is TabListAction,
+            is EngineAction.LinkEngineSessionAction -> {
+                switchActiveStateIfNeeded(store.state)
+            }
         }
     }
 
