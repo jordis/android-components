@@ -5,9 +5,9 @@
 package mozilla.components.browser.session.engine.middleware
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.CustomTabListAction
 import mozilla.components.browser.state.action.EngineAction
@@ -25,10 +25,9 @@ import mozilla.components.lib.state.MiddlewareStore
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
-import mozilla.components.support.test.rule.MainCoroutineRule
+import org.junit.After
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.never
@@ -38,12 +37,16 @@ import org.mockito.Mockito.verify
 @RunWith(AndroidJUnit4::class)
 class TabsRemovedMiddlewareTest {
 
-    @get:Rule
-    val coroutinesTestRule = MainCoroutineRule()
+    private val dispatcher = TestCoroutineDispatcher()
+    private val scope = CoroutineScope(dispatcher)
+
+    @After
+    fun tearDown() {
+        dispatcher.cleanupTestCoroutines()
+    }
 
     @Test
     fun `closes and unlinks engine session when tab is removed`() = runBlocking {
-        val scope = MainScope()
         val middleware = TabsRemovedMiddleware(scope)
 
         val tab = createTab("https://www.mozilla.org", id = "1")
@@ -55,7 +58,7 @@ class TabsRemovedMiddlewareTest {
         val engineSession = linkEngineSession(store, tab.id)
         store.dispatch(TabListAction.RemoveTabAction(tab.id)).joinBlocking()
         store.waitUntilIdle()
-        scope.coroutineContext[Job]?.children?.forEach { it.join() }
+        dispatcher.advanceUntilIdle()
 
         assertNull(store.state.findTab(tab.id)?.engineState?.engineSession)
         verify(engineSession).close()
@@ -63,7 +66,6 @@ class TabsRemovedMiddlewareTest {
 
     @Test
     fun `closes and unlinks engine session when all normal tabs are removed`() = runBlocking {
-        val scope = MainScope()
         val middleware = TabsRemovedMiddleware(scope)
 
         val tab1 = createTab("https://www.mozilla.org", id = "1", private = false)
@@ -80,7 +82,7 @@ class TabsRemovedMiddlewareTest {
 
         store.dispatch(TabListAction.RemoveAllNormalTabsAction).joinBlocking()
         store.waitUntilIdle()
-        scope.coroutineContext[Job]?.children?.forEach { it.join() }
+        dispatcher.advanceUntilIdle()
 
         assertNull(store.state.findTab(tab1.id)?.engineState?.engineSession)
         assertNull(store.state.findTab(tab2.id)?.engineState?.engineSession)
@@ -92,7 +94,6 @@ class TabsRemovedMiddlewareTest {
 
     @Test
     fun `closes and unlinks engine session when all private tabs are removed`() = runBlocking {
-        val scope = MainScope()
         val middleware = TabsRemovedMiddleware(scope)
 
         val tab1 = createTab("https://www.mozilla.org", id = "1", private = true)
@@ -109,7 +110,7 @@ class TabsRemovedMiddlewareTest {
 
         store.dispatch(TabListAction.RemoveAllPrivateTabsAction).joinBlocking()
         store.waitUntilIdle()
-        scope.coroutineContext[Job]?.children?.forEach { it.join() }
+        dispatcher.advanceUntilIdle()
 
         assertNull(store.state.findTab(tab1.id)?.engineState?.engineSession)
         assertNull(store.state.findTab(tab2.id)?.engineState?.engineSession)
@@ -121,7 +122,6 @@ class TabsRemovedMiddlewareTest {
 
     @Test
     fun `closes and unlinks engine session when all tabs are removed`() = runBlocking {
-        val scope = MainScope()
         val middleware = TabsRemovedMiddleware(scope)
 
         val tab1 = createTab("https://www.mozilla.org", id = "1", private = true)
@@ -138,7 +138,7 @@ class TabsRemovedMiddlewareTest {
 
         store.dispatch(TabListAction.RemoveAllTabsAction).joinBlocking()
         store.waitUntilIdle()
-        scope.coroutineContext[Job]?.children?.forEach { it.join() }
+        dispatcher.advanceUntilIdle()
 
         assertNull(store.state.findTab(tab1.id)?.engineState?.engineSession)
         assertNull(store.state.findTab(tab2.id)?.engineState?.engineSession)
@@ -150,7 +150,6 @@ class TabsRemovedMiddlewareTest {
 
     @Test
     fun `closes and unlinks engine session when custom tab is removed`() = runBlocking {
-        val scope = MainScope()
         val middleware = TabsRemovedMiddleware(scope)
 
         val tab = createCustomTab("https://www.mozilla.org", id = "1")
@@ -162,7 +161,7 @@ class TabsRemovedMiddlewareTest {
         val engineSession = linkEngineSession(store, tab.id)
         store.dispatch(CustomTabListAction.RemoveCustomTabAction(tab.id)).joinBlocking()
         store.waitUntilIdle()
-        scope.coroutineContext[Job]?.children?.forEach { it.join() }
+        dispatcher.advanceUntilIdle()
 
         assertNull(store.state.findTab(tab.id)?.engineState?.engineSession)
         verify(engineSession).close()
@@ -170,7 +169,6 @@ class TabsRemovedMiddlewareTest {
 
     @Test
     fun `closes and unlinks engine session when all custom tabs are removed`() = runBlocking {
-        val scope = MainScope()
         val middleware = TabsRemovedMiddleware(scope)
 
         val tab1 = createCustomTab("https://www.mozilla.org", id = "1")
@@ -187,7 +185,7 @@ class TabsRemovedMiddlewareTest {
 
         store.dispatch(CustomTabListAction.RemoveAllCustomTabsAction).joinBlocking()
         store.waitUntilIdle()
-        scope.coroutineContext[Job]?.children?.forEach { it.join() }
+        dispatcher.advanceUntilIdle()
 
         assertNull(store.state.findCustomTab(tab1.id)?.engineState?.engineSession)
         assertNull(store.state.findCustomTab(tab2.id)?.engineState?.engineSession)
