@@ -543,6 +543,14 @@ sealed class EngineAction : BrowserAction() {
         val sessionId: String,
         val engineSessionState: EngineSessionState
     ) : EngineAction()
+
+    /**
+     * Updates the [EngineSession.Observer] of the session with the provided [sessionId].
+     */
+    data class UpdateEngineSessionObserverAction(
+        val sessionId: String,
+        val engineSessionObserver: EngineSession.Observer
+    ) : EngineAction()
 }
 
 /**

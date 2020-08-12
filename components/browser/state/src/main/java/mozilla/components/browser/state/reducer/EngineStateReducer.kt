@@ -24,8 +24,12 @@ internal object EngineStateReducer {
         is EngineAction.UnlinkEngineSessionAction -> state.copyWithEngineState(action.sessionId) {
             it.copy(
                 engineSession = null,
-                engineSessionState = null
+                engineSessionState = null,
+                engineObserver = null
             )
+        }
+        is EngineAction.UpdateEngineSessionObserverAction -> state.copyWithEngineState(action.sessionId) {
+            it.copy(engineObserver = action.engineSessionObserver)
         }
         is EngineAction.UpdateEngineSessionStateAction -> state.copyWithEngineState(action.sessionId) {
             it.copy(engineSessionState = action.engineSessionState)

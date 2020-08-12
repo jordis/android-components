@@ -26,6 +26,10 @@ internal class LinkingMiddleware(
         next: (BrowserAction) -> Unit,
         action: BrowserAction
     ) {
+        if (action is EngineAction.UnlinkEngineSessionAction) {
+            unlink(store, action)
+        }
+
         next(action)
 
         if (action is EngineAction.LinkEngineSessionAction) {
@@ -43,6 +47,7 @@ internal class LinkingMiddleware(
         if (session != null) {
             val observer = EngineObserver(session, store)
             action.engineSession.register(observer)
+            store.dispatch(EngineAction.UpdateEngineSessionObserverAction(session.id, observer))
         }
 
         if (action.skipLoading) {
@@ -62,6 +67,17 @@ internal class LinkingMiddleware(
             }
 
             action.engineSession.loadUrl(tab.content.url, parent = parentEngineSession)
+        }
+    }
+
+    private fun unlink(
+        store: MiddlewareStore<BrowserState, BrowserAction>,
+        action: EngineAction.UnlinkEngineSessionAction
+    ) {
+        val tab = store.state.findTabOrCustomTab(action.sessionId) ?: return
+
+        tab.engineState.engineObserver?.let {
+            tab.engineState.engineSession?.unregister(it)
         }
     }
 }
