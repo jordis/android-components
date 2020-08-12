@@ -4,6 +4,8 @@
 
 package mozilla.components.browser.session.engine.middleware
 
+import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.engine.EngineObserver
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.selector.findTabOrCustomTab
@@ -16,7 +18,9 @@ import mozilla.components.support.ktx.kotlin.isExtensionUrl
 /**
  * [Middleware] that handles side-effects of linking a session to an engine session.
  */
-internal class LinkingMiddleware : Middleware<BrowserState, BrowserAction> {
+internal class LinkingMiddleware(
+    private val sessionLookup: (String) -> Session?
+) : Middleware<BrowserState, BrowserAction> {
     override fun invoke(
         store: MiddlewareStore<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
@@ -34,6 +38,12 @@ internal class LinkingMiddleware : Middleware<BrowserState, BrowserAction> {
         action: EngineAction.LinkEngineSessionAction
     ) {
         val tab = store.state.findTabOrCustomTab(action.sessionId) ?: return
+
+        val session = sessionLookup(action.sessionId)
+        if (session != null) {
+            val observer = EngineObserver(session, store)
+            action.engineSession.register(observer)
+        }
 
         if (action.skipLoading) {
             return

@@ -521,7 +521,6 @@ sealed class EngineAction : BrowserAction() {
     data class LinkEngineSessionAction(
         val sessionId: String,
         val engineSession: EngineSession,
-        val engineSessionObserver: EngineSession.Observer? = null,
         val skipLoading: Boolean = false
     ) : EngineAction()
 

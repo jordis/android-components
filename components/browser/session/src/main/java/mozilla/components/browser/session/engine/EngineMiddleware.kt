@@ -52,7 +52,7 @@ object EngineMiddleware {
                 sessionLookup,
                 scope
             ),
-            LinkingMiddleware(),
+            LinkingMiddleware(sessionLookup),
             TabsRemovedMiddleware(scope),
             SuspendMiddleware(scope),
             WebExtensionMiddleware(),
@@ -103,10 +103,6 @@ private fun createEngineSession(
     }
 
     val engineSession = engine.createSession(tab.content.private, tab.contextId)
-
-    val observer = EngineObserver(session, store)
-    engineSession.register(observer)
-
     logger.debug("Created engine session for tab ${tab.id}")
 
     val engineSessionState = tab.engineState.engineSessionState
@@ -118,7 +114,7 @@ private fun createEngineSession(
     }
 
     store.dispatch(
-        EngineAction.LinkEngineSessionAction(tab.id, engineSession, observer, skipLoading)
+        EngineAction.LinkEngineSessionAction(tab.id, engineSession, skipLoading = skipLoading)
     )
 
     return engineSession

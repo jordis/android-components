@@ -116,6 +116,8 @@ class SessionManager(
             )
         }
 
+        delegate.add(session, selected, parent)
+
         if (engineSession != null) {
             store?.syncDispatch(LinkEngineSessionAction(
                 session.id,
@@ -133,8 +135,6 @@ class SessionManager(
                 engineSessionState
             ))
         }
-
-        delegate.add(session, selected, parent)
     }
 
     /**
