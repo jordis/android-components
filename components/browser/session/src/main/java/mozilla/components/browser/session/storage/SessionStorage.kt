@@ -82,11 +82,10 @@ class SessionStorage(
     @CheckResult
     fun autoSave(
         store: BrowserStore,
-        sessionManager: SessionManager,
         interval: Long = AutoSave.DEFAULT_INTERVAL_MILLISECONDS,
         unit: TimeUnit = TimeUnit.MILLISECONDS
     ): AutoSave {
-        return AutoSave(store, sessionManager, this, unit.toMillis(interval))
+        return AutoSave(store, this, unit.toMillis(interval))
     }
 }
 

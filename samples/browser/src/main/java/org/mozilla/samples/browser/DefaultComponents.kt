@@ -139,13 +139,15 @@ open class DefaultComponents(private val applicationContext: Context) {
 
     val sessionManager by lazy {
         SessionManager(engine, store).apply {
-            sessionStorage.restore()?.let { snapshot -> restore(snapshot) }
+            sessionStorage.restore()?.let {
+                snapshot -> restore(snapshot)
+            }
 
             if (size == 0) {
                 add(Session("about:blank"))
             }
 
-            sessionStorage.autoSave(store, this)
+            sessionStorage.autoSave(store)
                 .periodicallyInForeground(interval = 30, unit = TimeUnit.SECONDS)
                 .whenGoingToBackground()
                 .whenSessionsChange()

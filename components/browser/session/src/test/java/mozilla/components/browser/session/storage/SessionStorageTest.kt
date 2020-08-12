@@ -8,13 +8,15 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.session.Session
-import mozilla.components.browser.state.state.SessionState.Source
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.ext.toTabSessionState
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.SessionState.Source
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
@@ -167,14 +169,12 @@ class SessionStorageTest {
             val owner = mock(LifecycleOwner::class.java)
             val lifecycle = LifecycleRegistry(owner)
 
-            val sessionManager: SessionManager = mock()
             val sessionStorage: SessionStorage = mock()
 
             val state = BrowserState()
             val store = BrowserStore(state)
             val autoSave = AutoSave(
                 store = store,
-                sessionManager = sessionManager,
                 sessionStorage = sessionStorage,
                 minimumIntervalMs = 0
             ).whenGoingToBackground(lifecycle)
@@ -199,23 +199,28 @@ class SessionStorageTest {
     @Test
     fun `AutoSave - when session gets added`() {
         runBlocking {
-            val sessionManager = SessionManager(mock())
-
-            val sessionStorage: SessionStorage = mock()
-
             val state = BrowserState()
             val store = BrowserStore(state)
+
+            val sessionManager = SessionManager(mock(), store)
+            val sessionStorage: SessionStorage = mock()
+
+            val dispatcher = TestCoroutineDispatcher()
+            val scope = CoroutineScope(dispatcher)
+
             val autoSave = AutoSave(
                 store = store,
-                sessionManager = sessionManager,
                 sessionStorage = sessionStorage,
                 minimumIntervalMs = 0
-            ).whenSessionsChange()
+            ).whenSessionsChange(scope)
+
+            dispatcher.advanceUntilIdle()
 
             assertNull(autoSave.saveJob)
             verify(sessionStorage, never()).save(any())
 
             sessionManager.add(Session("https://www.mozilla.org"))
+            dispatcher.advanceUntilIdle()
 
             autoSave.saveJob?.join()
 
@@ -226,27 +231,33 @@ class SessionStorageTest {
     @Test
     fun `AutoSave - when session gets removed`() {
         runBlocking {
-            val sessionManager = SessionManager(mock())
+            val sessionStorage: SessionStorage = mock()
+
+            val state = BrowserState()
+            val store = BrowserStore(state)
+
+            val sessionManager = SessionManager(mock(), store)
             sessionManager.add(Session("https://www.firefox.com"))
             val session = Session("https://www.mozilla.org").also {
                 sessionManager.add(it)
             }
 
-            val sessionStorage: SessionStorage = mock()
+            val dispatcher = TestCoroutineDispatcher()
+            val scope = CoroutineScope(dispatcher)
 
-            val state = BrowserState()
-            val store = BrowserStore(state)
             val autoSave = AutoSave(
                 store = store,
-                sessionManager = sessionManager,
                 sessionStorage = sessionStorage,
                 minimumIntervalMs = 0
-            ).whenSessionsChange()
+            ).whenSessionsChange(scope)
+
+            dispatcher.advanceUntilIdle()
 
             assertNull(autoSave.saveJob)
             verify(sessionStorage, never()).save(any())
 
             sessionManager.remove(session)
+            dispatcher.advanceUntilIdle()
 
             autoSave.saveJob?.join()
 
@@ -257,25 +268,31 @@ class SessionStorageTest {
     @Test
     fun `AutoSave - when all sessions get removed`() {
         runBlocking {
-            val sessionManager = SessionManager(mock())
+            val state = BrowserState()
+            val store = BrowserStore(state)
+
+            val sessionManager = SessionManager(mock(), store)
             sessionManager.add(Session("https://www.firefox.com"))
             sessionManager.add(Session("https://www.mozilla.org"))
 
             val sessionStorage: SessionStorage = mock()
 
-            val state = BrowserState()
-            val store = BrowserStore(state)
+            val dispatcher = TestCoroutineDispatcher()
+            val scope = CoroutineScope(dispatcher)
+
             val autoSave = AutoSave(
                 store = store,
-                sessionManager = sessionManager,
                 sessionStorage = sessionStorage,
                 minimumIntervalMs = 0
-            ).whenSessionsChange()
+            ).whenSessionsChange(scope)
+
+            dispatcher.advanceUntilIdle()
 
             assertNull(autoSave.saveJob)
             verify(sessionStorage, never()).save(any())
 
             sessionManager.removeAll()
+            dispatcher.advanceUntilIdle()
 
             autoSave.saveJob?.join()
 
@@ -286,20 +303,25 @@ class SessionStorageTest {
     @Test
     fun `AutoSave - when no sessions left`() {
         runBlocking {
+            val state = BrowserState()
+            val store = BrowserStore(state)
+
             val session = Session("https://www.firefox.com")
-            val sessionManager = SessionManager(mock())
+            val sessionManager = SessionManager(mock(), store)
             sessionManager.add(session)
 
             val sessionStorage: SessionStorage = mock()
 
-            val state = BrowserState()
-            val store = BrowserStore(state)
+            val dispatcher = TestCoroutineDispatcher()
+            val scope = CoroutineScope(dispatcher)
+
             val autoSave = AutoSave(
                 store = store,
-                sessionManager = sessionManager,
                 sessionStorage = sessionStorage,
                 minimumIntervalMs = 0
-            ).whenSessionsChange()
+            ).whenSessionsChange(scope)
+
+            dispatcher.advanceUntilIdle()
 
             assertNull(autoSave.saveJob)
             verify(sessionStorage, never()).save(any())
@@ -307,6 +329,7 @@ class SessionStorageTest {
             // We didn't specify a default session lambda so this will
             // leave us without a session
             sessionManager.remove(session)
+            dispatcher.advanceUntilIdle()
             assertEquals(0, sessionManager.size)
 
             autoSave.saveJob?.join()
@@ -318,7 +341,10 @@ class SessionStorageTest {
     @Test
     fun `AutoSave - when session gets selected`() {
         runBlocking {
-            val sessionManager = SessionManager(mock())
+            val state = BrowserState()
+            val store = BrowserStore(state)
+
+            val sessionManager = SessionManager(mock(), store)
             sessionManager.add(Session("https://www.firefox.com"))
             val session = Session("https://www.mozilla.org").also {
                 sessionManager.add(it)
@@ -326,20 +352,22 @@ class SessionStorageTest {
 
             val sessionStorage: SessionStorage = mock()
 
-            val state = BrowserState()
-            val store = BrowserStore(state)
+            val dispatcher = TestCoroutineDispatcher()
+            val scope = CoroutineScope(dispatcher)
 
             val autoSave = AutoSave(
                 store = store,
-                sessionManager = sessionManager,
                 sessionStorage = sessionStorage,
                 minimumIntervalMs = 0
-            ).whenSessionsChange()
+            ).whenSessionsChange(scope)
+
+            dispatcher.advanceUntilIdle()
 
             assertNull(autoSave.saveJob)
             verify(sessionStorage, never()).save(any())
 
             sessionManager.select(session)
+            dispatcher.advanceUntilIdle()
 
             autoSave.saveJob?.join()
 
@@ -350,28 +378,33 @@ class SessionStorageTest {
     @Test
     fun `AutoSave - when session loading state changes`() {
         runBlocking {
-            val sessionManager = SessionManager(mock())
-            val session = Session("https://www.mozilla.org").also {
-                sessionManager.add(it)
-            }
-
             val sessionStorage: SessionStorage = mock()
 
             val state = BrowserState()
             val store = BrowserStore(state)
+
+            val sessionManager = SessionManager(mock(), store)
+            val session = Session("https://www.mozilla.org").also {
+                sessionManager.add(it)
+            }
+
+            val dispatcher = TestCoroutineDispatcher()
+            val scope = CoroutineScope(dispatcher)
+
             val autoSave = AutoSave(
                 store = store,
-                sessionManager = sessionManager,
                 sessionStorage = sessionStorage,
                 minimumIntervalMs = 0
-            ).whenSessionsChange()
+            ).whenSessionsChange(scope)
 
             session.loading = true
+            dispatcher.advanceUntilIdle()
 
             assertNull(autoSave.saveJob)
             verify(sessionStorage, never()).save(any())
 
             session.loading = false
+            dispatcher.advanceUntilIdle()
 
             autoSave.saveJob?.join()
 
@@ -398,7 +431,7 @@ class SessionStorageTest {
         val state = BrowserState()
         val store = BrowserStore(state)
         val storage = SessionStorage(testContext, engine)
-        storage.autoSave(store, mock())
+        storage.autoSave(store)
             .periodicallyInForeground(300, TimeUnit.SECONDS, scheduler, lifecycle)
 
         verifyNoMoreInteractions(scheduler)
@@ -419,14 +452,12 @@ class SessionStorageTest {
 
     @Test
     fun `AutoSave - No new job triggered while save in flight`() {
-        val sessionManager = SessionManager(mock())
         val sessionStorage: SessionStorage = mock()
 
         val state = BrowserState()
         val store = BrowserStore(state)
         val autoSave = AutoSave(
             store = store,
-            sessionManager = sessionManager,
             sessionStorage = sessionStorage,
             minimumIntervalMs = 0
         )
@@ -440,14 +471,12 @@ class SessionStorageTest {
 
     @Test
     fun `AutoSave - New job triggered if current job is done`() {
-        val sessionManager = SessionManager(mock())
         val sessionStorage: SessionStorage = mock()
 
         val state = BrowserState()
         val store = BrowserStore(state)
         val autoSave = AutoSave(
             store = store,
-            sessionManager = sessionManager,
             sessionStorage = sessionStorage,
             minimumIntervalMs = 0
         )
